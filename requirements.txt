@@ -6,6 +6,5 @@ django-filter
 numpy
 simplejson
 sklearn
-collections
 future
 
