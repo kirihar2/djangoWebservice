@@ -3,4 +3,10 @@ psycopg2
 djangorestframework
 markdown
 django-filter
+numpy
+os
+simplejson
+sklearn
+collections
+future
 
