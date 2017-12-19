@@ -10,11 +10,27 @@ from past.builtins import long,basestring
 
 
 class JsonSerialize:
+    """This class is used to parse models from scikit learn to Json specified by the input parameter.
+   Start by initializing the class by setting a variable (such as 'ser' in the example below)
+    \n\t ser=JsonSerialize(filename)\n
+   where filename is the specified file, lets call this sampleJsonSerializeFile (the class will append .json extension, so just enter the filename)
+   From here it is pretty simple just call the trained model (call the trained model, myLinearRegressionModel and yes this variable is a trained linear regression model, from sklearn.linearModel)
+   \n\t ser.data_to_json(myLinearRegressionModel)\n
+   Then if you look in the current directory there should be a file called sampleJsonSerializeFile.json
+
+   If you want to read the same file, in a different python file, initialize the class like before
+   \n\t ser=JsonSerialize(filename)\n
+   Again with the filename being the same filename json file (again you do not need the .json extension)
+   Then you simmply assign the class in your script as the following
+   \n\t lr2 = ser.json_to_data(sklearn.linearModel.LinearRegression())\n
+   Finally the variable lr2 will be instanciated with all parameters saved in the Json file.
+   As an additional safeguard the function will catch unmatched models by an attributeError\n"""
     #filename is read only
     @property
     def _file_name(self):
         return self._file
-
+    def __str__(self):
+        return "File name specified as "+self._file
 
     def __init__(self,filename,overwrite=False):
         #Never overwrite file unless overwrite option specified
@@ -25,6 +41,7 @@ class JsonSerialize:
                 ind+=1
                 temp=temp[-1:]+str(ind)
             filename=temp
+            print(filename)
         try:
             if os.path.isfile(filename) and not overwrite:
                 rename(filename)
@@ -85,28 +102,26 @@ class JsonSerialize:
         return dct
 
     def data_to_json(self,data):
-        print('Serializing data to json'+self._file)
+        print('Serializing... ')
         d = data.__dict__
         for k, v in d.items():
             d[k] = self.serialize(v)
         d['className']=str(data.__class__)
-        print(d['className'])
         with open(self._file,'w') as f:
             json.dump(d, f)
-        print('Serialized file')
+        print('Serialized file at '+self._file)
     def json_to_data(self,class_init):
-
-        attr = json.load(open(self._file))
-
-        for k, v in attr.items():
-            if k == 'className':
-
-                if not str(type(class_init)) == str(attr[k]):
-                    print(str(type(class_init)), str(attr[k]))
-                    raise AttributeError("Specified class name does not match the JSON class. Specified class name is "+str(type(class_init))+" JSON class name is "+attr[k])
-            else:
+        with open(self._file) as f:
+            attr=json.load(f)
+            if not str(type(class_init)) == str(attr['className']):
+                print(str(type(class_init)), str(attr['className']))
+                raise AttributeError("Specified class name does not match the JSON class. Specified class name is "+str(type(class_init))+" JSON class name is "+attr['className'])
+            for k, v in attr.items():
+                if k=='className':
+                    continue
                 setattr(class_init, k, self.deserialize(v))
-        return class_init
+
+            return class_init
 
     '''
     def serialize(self,attr):
