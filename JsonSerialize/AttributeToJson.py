@@ -27,27 +27,30 @@ class JsonSerialize:
    As an additional safeguard the function will catch unmatched models by an attributeError\n"""
     #filename is read only
     @property
-    def _file_name(self):
+    def file(self):
         return self._file
+
     def __str__(self):
         return "File name specified as "+self._file
-
+    def rename(self,filename):
+        ind=1
+        temp=filename+'_'+str(ind)
+        while os.path.isfile(temp):
+            ind+=1
+            temp=temp[-1:]+str(ind)
+        filename=temp
+        print(filename)
+        self._file=filename
     def __init__(self,filename,overwrite=False):
         #Never overwrite file unless overwrite option specified
-        def rename(self,filename):
-            ind=1
-            temp=filename+'_'+str(ind)
-            while os.path.isfile(temp):
-                ind+=1
-                temp=temp[-1:]+str(ind)
-            filename=temp
-            print(filename)
+
         try:
             if os.path.isfile(filename) and not overwrite:
-                rename(filename)
+                self.rename(filename)
         except Exception as e:
             raise e
         self._file=filename+'.json'
+        self.overwrite=overwrite
     @staticmethod
     def isnamedtuple(obj):
             """Heuristic check if an object is a namedtuple."""
@@ -107,10 +110,13 @@ class JsonSerialize:
         for k, v in d.items():
             d[k] = self.serialize(v)
         d['className']=str(data.__class__)
+        if os.path.isfile(self._file):
+            self.rename(self._file)
         with open(self._file,'w') as f:
             json.dump(d, f)
         print('Serialized file at '+self._file)
     def json_to_data(self,class_init):
+
         with open(self._file) as f:
             attr=json.load(f)
             if not str(type(class_init)) == str(attr['className']):

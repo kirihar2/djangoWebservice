@@ -2,3 +2,5 @@
 composeexample/*
 */sampleJsonAttribute.json
 *.pyc
+PiCloud/*
+
